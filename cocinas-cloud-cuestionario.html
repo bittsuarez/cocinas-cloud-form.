@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cocinas.cloud · Cuestionario para el dueño</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef3f7;--card:#fff;--ink:#14232f;--mute:#53687a;--line:#cfdbe4;--accent:#1f6f8b;--accent-ink:#fff;--ok:#1b7a4b;--err:#b3261e}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1a22;--card:#17262f;--ink:#e8f0f5;--mute:#9db1c0;--line:#2b4050;--accent:#5bb5d3;--accent-ink:#0b1a22;--ok:#5fd09a;--err:#ff8a80}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Figtree,system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:720px;margin:0 auto;padding:20px 16px 120px}
+h1{font-size:2rem;font-weight:800;letter-spacing:-.02em;margin:12px 0 4px}
+.lead{color:var(--mute);margin:0 0 20px;max-width:60ch}
+.bar{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 0;border-bottom:1px solid var(--line);margin-bottom:16px;font-size:.9rem;color:var(--mute)}
+.track{height:6px;background:var(--line);border-radius:3px;margin-top:6px;overflow:hidden}
+.track i{display:block;height:100%;width:0;background:var(--accent);transition:width .25s}
+fieldset{border:0;margin:28px 0 0;padding:0;min-width:0}
+legend{font-size:1.25rem;font-weight:800;padding:0 0 8px;width:100%;border-bottom:2px solid var(--accent);margin-bottom:12px}
+.q{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:12px}
+.q label.t{display:block;font-weight:600;margin-bottom:6px}
+input:not([type=checkbox]),textarea,select{width:100%;font-family:inherit;font-size:1rem;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px;min-height:44px}
+textarea{resize:vertical;min-height:72px}
+.fs{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0 12px}
+.w{grid-column:1/-1}
+.fl{display:block;font-size:.85rem;color:var(--mute);margin:10px 0 4px}
+.ch{display:flex;flex-wrap:wrap;gap:8px}
+.ch label{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--bg);min-height:44px}
+input[type=checkbox]{width:20px;height:20px;accent-color:var(--accent)}
+.sc{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+th,td{padding:6px 4px;text-align:left;vertical-align:middle;white-space:nowrap}
+th{font-weight:600;color:var(--mute)}
+td input:not([type=checkbox]){min-width:96px;padding:8px}
+td input[type=checkbox]{margin:0 8px}
+.rl{display:block;font-size:.85rem;color:var(--mute);margin-top:14px}
+.rule{margin-top:6px}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+button{font:inherit;font-weight:800;background:var(--accent);color:var(--accent-ink);border:0;border-radius:10px;padding:14px 22px;width:100%;min-height:50px;margin-top:28px;cursor:pointer}
+button:disabled{opacity:.6;cursor:wait}
+.mini{width:auto;min-height:44px;margin-top:10px;padding:10px 14px;background:transparent;color:var(--accent);border:1px solid var(--accent);font-weight:600}
+.x{width:auto;min-height:40px;margin:0;padding:6px 10px;background:transparent;color:var(--err);border:1px solid var(--line)}
+#msg{margin-top:14px;font-weight:600}
+.ok{color:var(--ok)}.err{color:var(--err)}
+.hp{position:absolute;left:-9999px}
+</style>
+</head>
+<body>
+<main>
+<h1>Cocinas.cloud</h1>
+<p class="lead">Cuestionario para el dueño. Elige las opciones que correspondan y, en cada pregunta, marca si el bot puede responder solo, si debe pedir un dato más o si debe derivar a una persona.</p>
+<div class="bar"><span id="count">0 de 0 preguntas respondidas</span><div class="track"><i id="prog"></i></div></div>
+<form id="f" novalidate></form>
+</main>
+<script>
+const EMAIL="cocinas.cloud@gmail.com",ENDPOINT="https://formsubmit.co/ajax/"+EMAIL,KEY="cocinas-cloud-borrador-2";
+const DAYS=["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"];
+const ALG=["Gluten","Lácteos","Frutos secos","Mariscos","Huevo","Soya"];
+const RULES=["Responde solo","Pide un dato más","Deriva a persona"];
+const YN="Sí,No", DEP="Sí,No,Depende";
+// campo = "tipo|etiqueta|opciones"  tipos: s lista, m varias, n número, t texto corto, tt texto abierto, tm hora, d fecha
+const S=[
+["Sección 1 · Horarios y ubicación",[
+["Horario de apertura y cierre por día. ¿La cocina cierra antes que el local?",["@h"]],
+["¿Abren feriados y domingos? Si depende, ¿quién decide y cuándo avisa?",["s|Feriados|"+DEP,"s|Domingos|"+DEP,"s|Quién decide|Dueño,Administrador,Encargado de turno","s|Cuándo avisa|El día anterior,Con 48 horas,Con una semana,No avisa"]],
+["Dirección exacta, referencia y link de Google Maps.",["tt|Dirección exacta","t|Referencia (frente a…)","t|Link de Google Maps"]],
+["¿Tienen estacionamiento?",["s|Tipo|Propio,Cercano,No hay","s|Costo|Gratis,Pagado,Depende"]],
+["Metro o paraderos más cercanos.",["m|Hay cerca|Metro,Paradero de bus,Ninguno","t|Nombre de la estación o paradero"]]]],
+["Sección 2 · Menú y precios",[
+["Carta completa con precios.",["s|Cómo la entregas|Con el link de abajo,La envío por correo,La envío por WhatsApp","t|Link de la carta (si aplica)"]],
+["Menú ejecutivo: precio, qué incluye, horario en que aplica, ¿cambia a diario?",["n|Precio ($)","s|¿Cambia a diario?|Sí,No,Cambia cada semana","m|Incluye|Entrada,Plato de fondo,Postre,Bebida,Café","m|Días en que aplica|Lun,Mar,Mié,Jue,Vie,Sáb,Dom","tm|Desde","tm|Hasta"]],
+["Platos vegetarianos, veganos, sin gluten y sin lactosa.",["m|Tienen platos|Vegetarianos,Veganos,Sin gluten,Sin lactosa,Ninguno","s|Cómo se identifican|Marcados en la carta,Hay que preguntar al garzón,Lista aparte"]],
+["Alérgenos por plato: marca los que contiene cada plato.",["@al"]],
+["¿Tienen menú infantil?",["s|¿Tienen?|"+YN,"n|Precio ($)","m|Contenido|Plato principal,Bebida,Postre,Sorpresa o juguete"]],
+["¿Quién actualiza precios y platos agotados, y con qué frecuencia?",["s|Quién actualiza|Dueño,Administrador,Cocina,Otro","s|Frecuencia|Todos los días,Cada semana,Solo cuando cambia algo","s|Quién avisa un plato agotado|Cocina,Garzones,No se avisa"]]]],
+["Sección 3 · Reservas",[
+["Horario en que se aceptan reservas.",["s|¿Es el mismo horario de apertura?|"+YN,"tm|Desde (si es distinto)","tm|Hasta (si es distinto)"]],
+["Capacidad total, máximo de personas por mesa, duración promedio de una mesa.",["n|Capacidad total (personas)","n|Máximo por mesa (personas)","n|Duración de una mesa (minutos)"]],
+["¿El bot puede confirmar solo o solo toma nota y tú confirmas?",["s|Quién confirma|El bot confirma solo,El bot toma nota y confirma una persona"]],
+["Grupo grande: desde cuántas personas, anticipo, menú cerrado y anticipación.",["n|Desde cuántas personas","s|Anticipo|No piden,Piden anticipo","s|Menú cerrado|No,Sí","s|Anticipación mínima|24 horas,48 horas,Una semana,Más de una semana"]],
+["Hasta cuándo se puede cancelar o modificar sin costo. ¿Qué pasa con el anticipo?",["s|Cancelar sin costo hasta|2 horas antes,24 horas antes,48 horas antes,No se puede","s|Anticipo si cancela a tiempo|Se devuelve,Queda como crédito,No se devuelve,No aplica"]],
+["Tolerancia si el cliente llega tarde. ¿Avisan antes de liberar la mesa?",["n|Minutos de tolerancia","s|¿Avisan antes de liberar?|"+YN]],
+["¿Usan hoy alguna agenda?",["s|Agenda actual|Google Calendar,Cuaderno,Excel,Otra,Ninguna"]]]],
+["Sección 4 · Delivery y retiro",[
+["Comunas donde reparten, con costo de envío por cada una.",["@dl"]],
+["Tiempo estimado de entrega.",["n|Hora normal (minutos)","n|Hora punta (minutos)"]],
+["Pedido mínimo.",["s|¿Hay pedido mínimo?|"+YN,"n|Monto ($)"]],
+["Tiempo de preparación para retiro en local.",["n|Minutos"]],
+["¿Quién reparte?",["s|Reparto|Repartidor propio,Uber Direct,Rappi,PedidosYa,Otro"]],
+["¿Registran estados del pedido? Si no, ¿quién responde “dónde está mi pedido”?",["s|¿Registran estados?|"+YN,"s|Quién responde|El bot con el estado,Cocina,Administrador,Repartidor"]]]],
+["Sección 5 · Pagos",[
+["Medios de pago aceptados.",["m|Aceptan|Tarjeta de débito,Tarjeta de crédito,Transferencia,Efectivo"]],
+["Datos de transferencia y correo del comprobante.",["tt|Datos de transferencia completos","t|Correo para el comprobante"]],
+["¿Aceptan vales?",["m|Aceptan|Sodexo,Edenred,Pluxee,Otros,Ninguno"]],
+["Boleta y factura.",["s|¿Boleta siempre?|Sí,No,Solo si la piden","s|Factura|Siempre,Solo con datos previos,Solo en eventos o grupos,No emiten"]]]],
+["Sección 6 · Eventos y otros",[
+["Salón para celebraciones.",["s|¿Tienen salón?|"+YN,"n|Capacidad (personas)","s|Costo|Arriendo,Consumo mínimo,Ambos,Gratis","n|Monto ($)","s|Anticipación|1 semana,2 semanas,1 mes,Más de 1 mes"]],
+["Terraza y mascotas.",["s|¿Tienen terraza?|"+YN,"s|Mascotas en terraza|"+DEP,"s|Mascotas en interior|"+DEP]],
+["Acceso para sillas de ruedas.",["s|Acceso|Sí,Parcial,No"]],
+["Promociones y happy hour vigentes.",["s|¿Hay promociones?|"+YN,"s|¿Hay happy hour?|"+YN,"d|Fecha de término"]],
+["Eventos o música en vivo.",["s|¿Hay?|Sí,No,A veces","s|Quién informa la programación|Dueño,Administrador,Redes sociales","s|Frecuencia|Cada semana,Cada mes"]]]],
+["Sección 7 · Reclamos",[
+["Pedido frío o incompleto: ¿qué compensan?",["m|Compensación|Reenvío,Descuento,Devolución,Depende del caso"]],
+["Cobro incorrecto: ¿quién lo revisa?",["s|Quién revisa|Dueño,Administrador,Caja"]],
+["Nombre y número al que derivar reclamos y “hablar con el administrador”.",["t|Nombre","t|Número (WhatsApp o teléfono)"]]]]
+];
+
+const E=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;");
+const f=document.getElementById("f");
+const TYPES={n:"number",tm:"time",d:"date",t:"text"};
+function fld(spec){
+  const [t,l,o]=spec.split("|"),op=o?o.split(","):[];
+  if(t=="m")return `<div class="w" role="group" aria-label="${E(l)}"><span class="fl">${E(l)}</span><div class="ch" data-l="${E(l)}">${op.map(x=>`<label><input type="checkbox" value="${E(x)}">${E(x)}</label>`).join("")}</div></div>`;
+  let c;
+  if(t=="s")c=`<select data-l="${E(l)}"><option value="">Elegir…</option>${op.map(x=>`<option>${E(x)}</option>`).join("")}</select>`;
+  else if(t=="tt")c=`<textarea data-l="${E(l)}"></textarea>`;
+  else c=`<input data-l="${E(l)}" type="${TYPES[t]}"${t=="n"?' inputmode="numeric" min="0"':""}>`;
+  return `<label class="${t=="tt"?"w ":""}fl">${E(l)}${c}</label>`;
+}
+const hrs=()=>`<div class="sc w"><table><thead><tr><th>Día<th>Cerrado<th>Local abre<th>Local cierra<th>Cocina cierra</tr></thead><tbody>${DAYS.map(d=>`<tr data-d="${d}"><td>${d}<td><input type="checkbox" class="cl" aria-label="${d} cerrado"><td><input type="time" aria-label="${d} abre"><td><input type="time" aria-label="${d} cierra"><td><input type="time" aria-label="${d} cocina cierra"></tr>`).join("")}</tbody></table></div>`;
+const tbl=(id,h,b)=>`<div class="sc w"><table data-t="${id}"><thead><tr>${h}</tr></thead><tbody></tbody></table></div><button type="button" class="mini w" data-add="${id}">${b}</button>`;
+const ROW={
+  al:()=>`<tr><td><input type="text" placeholder="Plato" aria-label="Plato">${ALG.map(a=>`<td><input type="checkbox" value="${a}" aria-label="${a}">`).join("")}<td><button type="button" class="x" aria-label="Quitar fila">✕</button></tr>`,
+  dl:()=>`<tr><td><input type="text" placeholder="Comuna" aria-label="Comuna"><td><input type="number" inputmode="numeric" min="0" placeholder="Costo $" aria-label="Costo de envío"><td><button type="button" class="x" aria-label="Quitar fila">✕</button></tr>`
+};
+const addRow=id=>f.querySelector(`[data-t=${id}] tbody`).insertAdjacentHTML("beforeend",ROW[id]());
+const sync=r=>{const c=r.querySelector(".cl").checked;r.querySelectorAll("[type=time]").forEach(t=>t.disabled=c)};
+
+let html="";
+S.forEach((s,i)=>{
+  html+=`<fieldset><legend>${s[0]}</legend>`;
+  s[1].forEach((q,j)=>{
+    html+=`<div class="q"><span class="t" style="display:block;font-weight:600;margin-bottom:6px">${j+1}. ${q[0]}</span><div class="fs">`+q[1].map(x=>x=="@h"?hrs():x=="@al"?tbl("al","<th>Plato"+ALG.map(a=>`<th>${a}`).join("")+"<th>","+ Agregar plato"):x=="@dl"?tbl("dl","<th>Comuna<th>Costo de envío ($)<th>","+ Agregar comuna"):fld(x)).join("")+
+    `</div><span class="rl" id="r${i}${j}l">Regla del bot</span><select class="rule" aria-labelledby="r${i}${j}l"><option value="">Elegir…</option>${RULES.map(r=>`<option>${r}</option>`).join("")}</select></div>`;
+  });
+  html+=`<div class="q"><label class="t" for="fin${i}" style="display:block;font-weight:600;margin-bottom:6px">¿Algo que respondas con un “depende”? Cuéntanos qué y de qué depende.</label><textarea id="fin${i}" data-fin="${i+1}"></textarea></div></fieldset>`;
+});
+html+=`<input class="hp" type="text" name="_honey" tabindex="-1" autocomplete="off" aria-hidden="true">
+<button type="submit" id="go">Enviar respuestas</button><div id="msg" role="status"></div>`;
+f.innerHTML=html;
+
+const all=()=>[...f.querySelectorAll("input:not(.hp),select,textarea")];
+const qs=[...f.querySelectorAll(".q")].filter(q=>q.querySelector(".rule"));
+let D={};try{D=JSON.parse(localStorage.getItem(KEY)||"{}")}catch(e){}
+const rc=D.r||{};
+["al","dl"].forEach(id=>{for(let n=0;n<(rc[id]??3);n++)addRow(id)});
+if(D.v)all().forEach((e,k)=>{if(k<D.v.length){if(e.type=="checkbox")e.checked=!!D.v[k];else e.value=D.v[k]}});
+f.querySelectorAll("tr[data-d]").forEach(sync);
+
+function save(){
+  try{localStorage.setItem(KEY,JSON.stringify({r:{al:f.querySelectorAll("[data-t=al] tbody tr").length,dl:f.querySelectorAll("[data-t=dl] tbody tr").length},v:all().map(e=>e.type=="checkbox"?+e.checked:e.value)}))}catch(e){}
+  const n=qs.filter(q=>[...q.querySelectorAll("input:not(.hp),select:not(.rule),textarea")].some(e=>e.type=="checkbox"?e.checked:e.value.trim())).length;
+  document.getElementById("count").textContent=`${n} de ${qs.length} preguntas respondidas`;
+  document.getElementById("prog").style.width=(n/qs.length*100)+"%";
+}
+save();
+f.addEventListener("input",e=>{if(e.target.classList.contains("cl"))sync(e.target.closest("tr"));save()});
+f.addEventListener("click",e=>{
+  const b=e.target.closest("[data-add]");
+  if(b){addRow(b.dataset.add);save();return}
+  const x=e.target.closest(".x");
+  if(x){x.closest("tr").remove();save()}
+});
+
+function lines(q){
+  const L=[];
+  q.querySelectorAll("[data-l]").forEach(w=>{
+    const v=w.classList.contains("ch")?[...w.querySelectorAll(":checked")].map(c=>c.value).join(", "):w.value.trim();
+    if(v)L.push(w.dataset.l+": "+v);
+  });
+  q.querySelectorAll("tr[data-d]").forEach(r=>{
+    const t=[...r.querySelectorAll("[type=time]")].map(x=>x.value);
+    if(r.querySelector(".cl").checked)L.push(r.dataset.d+": cerrado");
+    else if(t.some(Boolean))L.push(`${r.dataset.d}: local ${t[0]||"—"} a ${t[1]||"—"}, cocina cierra ${t[2]||"—"}`);
+  });
+  q.querySelectorAll("[data-t] tbody tr").forEach(r=>{
+    const id=r.closest("table").dataset.t,name=r.querySelector("[type=text]").value.trim();
+    if(id=="al"){const a=[...r.querySelectorAll(":checked")].map(c=>c.value);if(name||a.length)L.push(`${name||"(sin nombre)"}: ${a.join(", ")||"sin alérgenos marcados"}`)}
+    else{const c=r.querySelector("[type=number]").value;if(name||c)L.push(`${name||"(sin comuna)"}: $${c||"—"}`)}
+  });
+  return L;
+}
+
+f.addEventListener("submit",async e=>{
+  e.preventDefault();
+  const msg=document.getElementById("msg"),btn=document.getElementById("go");
+  if(f.querySelector("[name=_honey]").value)return;
+  const data={_subject:"Cocinas.cloud · Cuestionario del dueño",_template:"table",_captcha:"false"};
+  let n=0;
+  S.forEach((s,i)=>{
+    const qq=[...f.querySelectorAll("fieldset")[i].querySelectorAll(".q")];
+    s[1].forEach((q,j)=>{
+      const L=lines(qq[j]),r=qq[j].querySelector(".rule").value;
+      if(!L.length&&!r)return;
+      n++;
+      data[`${i+1}.${j+1} ${q[0]}`.slice(0,90)]=L.join("\n")+(r?`\n→ Regla del bot: ${r}`:"");
+    });
+    const fin=qq[qq.length-1].querySelector("textarea").value.trim();
+    if(fin){n++;data[`${i+1}.* Algo que respondas con un “depende”`]=fin}
+  });
+  if(!n){msg.className="err";msg.textContent="Responde al menos una pregunta antes de enviar.";return}
+  btn.disabled=true;msg.className="";msg.textContent="Enviando…";
+  try{
+    const res=await fetch(ENDPOINT,{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify(data)});
+    const out=await res.json();
+    if(res.ok&&String(out.success)=="true"){
+      msg.className="ok";msg.textContent="Respuestas enviadas. Gracias.";
+      try{localStorage.removeItem(KEY)}catch(e){}
+    }else throw new Error(out.message||"Error de envío");
+  }catch(err){
+    msg.className="err";
+    msg.textContent="No se pudo enviar: "+err.message+". Tus respuestas siguen guardadas en este dispositivo; intenta de nuevo.";
+  }
+  btn.disabled=false;
+});
+</script>
+</body>
+</html>
